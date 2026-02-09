@@ -125,21 +125,34 @@ class _TodoHomePageState extends State<TodoHomePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Nova Tarefa'),
-        content: TextField(
-          controller: _controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Digite a tarefa...',
-            border: OutlineInputBorder(),
+        content: Semantics(
+          identifier: 'taskInputField',
+          label: 'Campo de entrada de tarefa',
+          textField: true,
+          child: TextField(
+            controller: _controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Digite a tarefa...',
+              border: OutlineInputBorder(),
+            ),
+            onSubmitted: (_) => _addTask(),
           ),
-          onSubmitted: (_) => _addTask(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancelar'),
           ),
-          FilledButton(onPressed: _addTask, child: const Text('Adicionar')),
+          Semantics(
+            identifier: 'confirmAddTaskButton',
+            label: 'Confirmar adicionar tarefa',
+            button: true,
+            child: FilledButton(
+              onPressed: _addTask,
+              child: const Text('Adicionar'),
+            ),
+          ),
         ],
       ),
     );
@@ -153,29 +166,39 @@ class _TodoHomePageState extends State<TodoHomePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Editar Tarefa'),
-        content: TextField(
-          controller: editController,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Digite a tarefa...',
-            border: OutlineInputBorder(),
+        content: Semantics(
+          identifier: 'editTaskInputField',
+          label: 'Campo de edição de tarefa',
+          textField: true,
+          child: TextField(
+            controller: editController,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Digite a tarefa...',
+              border: OutlineInputBorder(),
+            ),
+            onSubmitted: (value) {
+              _editTask(index, value);
+              Navigator.pop(context);
+            },
           ),
-          onSubmitted: (value) {
-            _editTask(index, value);
-            Navigator.pop(context);
-          },
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancelar'),
           ),
-          FilledButton(
-            onPressed: () {
-              _editTask(index, editController.text);
-              Navigator.pop(context);
-            },
-            child: const Text('Salvar'),
+          Semantics(
+            identifier: 'confirmEditTaskButton',
+            label: 'Confirmar edição de tarefa',
+            button: true,
+            child: FilledButton(
+              onPressed: () {
+                _editTask(index, editController.text);
+                Navigator.pop(context);
+              },
+              child: const Text('Salvar'),
+            ),
           ),
         ],
       ),
@@ -239,62 +262,88 @@ class _TodoHomePageState extends State<TodoHomePage> {
               itemCount: _tasks.length,
               itemBuilder: (context, index) {
                 final task = _tasks[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    leading: IconButton(
-                      icon: Icon(
-                        task.isCompleted
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                        color: task.isCompleted
-                            ? Colors.green
-                            : Theme.of(context).colorScheme.primary,
-                        size: 28,
-                      ),
-                      onPressed: () => _toggleComplete(index),
-                    ),
-                    title: Text(
-                      task.title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        decoration: task.isCompleted
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
-                        color: task.isCompleted
-                            ? Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.5)
-                            : Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, size: 22),
-                          onPressed: () => _showEditTaskDialog(index),
-                          tooltip: 'Editar',
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete,
-                            color: Colors.redAccent,
-                            size: 22,
+                return Semantics(
+                  identifier: 'taskItem_$index',
+                  label: 'Tarefa ${task.title}',
+                  child: Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: ListTile(
+                      leading: Semantics(
+                        identifier: 'taskCheckbox_$index',
+                        label: task.isCompleted
+                            ? 'Marcar tarefa como não concluída'
+                            : 'Marcar tarefa como concluída',
+                        button: true,
+                        child: IconButton(
+                          icon: Icon(
+                            task.isCompleted
+                                ? Icons.check_circle
+                                : Icons.radio_button_unchecked,
+                            color: task.isCompleted
+                                ? Colors.green
+                                : Theme.of(context).colorScheme.primary,
+                            size: 28,
                           ),
-                          onPressed: () => _deleteTask(index),
-                          tooltip: 'Excluir',
+                          onPressed: () => _toggleComplete(index),
                         ),
-                      ],
+                      ),
+                      title: Text(
+                        task.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          decoration: task.isCompleted
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                          color: task.isCompleted
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.5)
+                              : Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Semantics(
+                            identifier: 'editTaskButton_$index',
+                            label: 'Editar tarefa',
+                            button: true,
+                            child: IconButton(
+                              icon: const Icon(Icons.edit, size: 22),
+                              onPressed: () => _showEditTaskDialog(index),
+                              tooltip: 'Editar',
+                            ),
+                          ),
+                          Semantics(
+                            identifier: 'deleteTaskButton_$index',
+                            label: 'Excluir tarefa',
+                            button: true,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.redAccent,
+                                size: 22,
+                              ),
+                              onPressed: () => _deleteTask(index),
+                              tooltip: 'Excluir',
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddTaskDialog,
-        icon: const Icon(Icons.add),
-        label: const Text('Nova Tarefa'),
+      floatingActionButton: Semantics(
+        identifier: 'addTaskButton',
+        label: 'Adicionar nova tarefa',
+        button: true,
+        child: FloatingActionButton.extended(
+          onPressed: _showAddTaskDialog,
+          icon: const Icon(Icons.add),
+          label: const Text('Nova Tarefa'),
+        ),
       ),
     );
   }
